@@ -60,7 +60,6 @@ Ce module permet d'**importer ces fichiers directement dans Odoo**, de les ratta
 - ✅ Facture client incluant automatiquement, en plus du prix de l'énergie : le **coût de restitution des CV** et le **droit d'accises spécial 2026**
 - ✅ **Anti-doublon de facturation** : une facture n'est jamais recréée si une facture (brouillon ou validée) existe déjà pour le même participant / la même période / la même opération
 - ✅ **Rapport de facture enrichi** avec un graphique matplotlib intégré (historique 12 mois de consommation/production du point EAN facturé)
-- ✅ Écran d'attente **« Veuillez patienter »** affiché pendant l'import, avec **déclenchement automatique** de l'import réel via JS (pas de clic manuel supplémentaire nécessaire, mais pas de barre de progression ni de pourcentage d'avancement)
 
 ## Installation
 
