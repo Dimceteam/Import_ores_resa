@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================================================== -->
+    <!-- ACTION                                                 -->
+    <!-- ===================================================== -->
+
+    <record id="action_generate_invoices_wizard" model="ir.actions.act_window">
+        <field name="name">Générer les factures (période)</field>
+        <field name="res_model">energy.invoice.generator.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ===================================================== -->
+    <!-- MENU (entre Import ORES et Import RESA)                -->
+    <!-- ===================================================== -->
+
+    <menuitem id="menu_energy_community_generate_invoices"
+              name="Générer factures (période)"
+              parent="menu_energy_community_root"
+              action="action_generate_invoices_wizard"
+              sequence="60"/>
+
+    <!-- ===================================================== -->
+    <!-- VUE WIZARD                                             -->
+    <!-- ===================================================== -->
+
+    <record id="generate_invoices_wizard_form" model="ir.ui.view">
+        <field name="name">energy.invoice.generator.wizard.form</field>
+        <field name="model">energy.invoice.generator.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Générer les factures pour une période">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Génération de factures par période</h1>
+                        <p class="text-muted">
+                            Sélectionnez une période pour générer les brouillons de
+                            facture (consommation et/ou production) des participants
+                            de l'opération de partage.
+                        </p>
+                    </div>
+
+                    <group string="Paramètres">
+                        <group>
+                            <field name="community_id" required="1"/>
+                            <field name="allowed_partner_ids" invisible="1"/>
+                            <field name="partner_ids" widget="many2many_tags"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   domain="[('id', 'in', allowed_partner_ids)]"
+                                   readonly="not community_id"
+                                   placeholder="Tous les participants"/>
+                            <field name="data_type" required="1"/>
+                        </group>
+                        <group>
+                            <field name="date_from" required="1"/>
+                            <field name="date_to" required="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Facturation">
+                        <group>
+                            <field name="invoice_date"/>
+                            <field name="payment_term_id"
+                                   help="Condition de paiement (30 jours fin de mois par défaut)"/>
+                        </group>
+                        <div class="text-muted" style="font-size: 11px;">
+                            <span>Journaux automatiques selon le type :</span>
+                            <ul style="margin-top: 5px;">
+                                <li><strong>Consommation</strong> → Journal de vente (facture client) au prix de vente de l'opération</li>
+                                <li><strong>Production</strong> → Journal d'achat (facture fournisseur) au prix d'achat producteur</li>
+                                <li><strong>TVA</strong> : 6%</li>
+                                <li>Les quantités sont regroupées par participant (EAN) sur toute la période</li>
+                                <li>Si aucun participant n'est sélectionné, toutes les factures de l'opération sont générées</li>
+                            </ul>
+                        </div>
+                    </group>
+
+                    <!-- Prévisualisation -->
+                    <group string="📊 Prévisualisation de la période"
+                           invisible="not date_from or not date_to or not community_id">
+                        <group>
+                            <field name="stat_records" readonly="1"/>
+                            <field name="stat_partners" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="stat_kwh" readonly="1"/>
+                            <field name="stat_amount" readonly="1"/>
+                        </group>
+                        <div class="text-warning" style="font-size: 12px;"
+                             invisible="stat_existing == 0">
+                            ⚠️ <field name="stat_existing" readonly="1" nolabel="1"
+                                      class="oe_inline"/> facture(s) existent déjà pour cette
+                            période et seront ignorées (anti-doublon).
+                        </div>
+                        <div class="text-danger" style="font-size: 12px;"
+                             invisible="stat_records != 0">
+                            ⚠️ Aucune donnée de consommation/production trouvée sur cette
+                            période pour cette opération de partage.
+                        </div>
+                    </group>
+
+                    <!-- Résultat -->
+                    <group string="✅ Résultat" invisible="not result_summary">
+                        <field name="result_summary" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button name="action_generate"
+                            string="Générer les factures"
+                            type="object"
+                            class="btn-primary"
+                            invisible="not date_from or not date_to or not community_id or stat_records == 0"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

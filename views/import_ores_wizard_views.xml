@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================================================== -->
+    <!-- ACTIONS                                                 -->
+    <!-- ===================================================== -->
+
+    <record id="action_import_ores_wizard" model="ir.actions.act_window">
+        <field name="name">Importer fichier ORES</field>
+        <field name="res_model">import.ores.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="action_energy_community" model="ir.actions.act_window">
+        <field name="name">Opérations de partage</field>
+        <field name="res_model">energy.community</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Gérez vos opérations de partage
+            </p>
+        </field>
+    </record>
+
+    <record id="action_energy_production" model="ir.actions.act_window">
+        <field name="name">Productions</field>
+        <field name="res_model">energy.community.production</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Données de production importées depuis ORES
+            </p>
+        </field>
+    </record>
+
+    <record id="action_energy_consumption" model="ir.actions.act_window">
+        <field name="name">Consommations</field>
+        <field name="res_model">energy.community.consumption</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Données de consommation importées depuis ORES
+            </p>
+        </field>
+    </record>
+
+    <!-- ===================================================== -->
+    <!-- MENUS : ordre demandé                                   -->
+    <!-- 10 = racine Communauté d'énergie (singulier)          -->
+    <!-- 20 = Productions                                        -->
+    <!-- 30 = Consommations                                      -->
+    <!-- 40 = Import ORES                                        -->
+    <!-- 50 = Import RESA (défini dans import_resa_wizard_views.xml) -->
+    <!-- ===================================================== -->
+
+    <menuitem id="menu_energy_community_root"
+              name="Communauté d'énergie"
+              action="action_energy_community"
+              sequence="10"/>
+
+    <menuitem id="menu_energy_community_production"
+              name="Productions"
+              parent="menu_energy_community_root"
+              action="action_energy_production"
+              sequence="20"/>
+
+    <menuitem id="menu_energy_community_consumption"
+              name="Consommations"
+              parent="menu_energy_community_root"
+              action="action_energy_consumption"
+              sequence="30"/>
+
+    <menuitem id="menu_energy_community_import_ores"
+              name="Importer ORES (CSV)"
+              parent="menu_energy_community_root"
+              action="action_import_ores_wizard"
+              sequence="40"/>
+
+    <!-- ===================================================== -->
+    <!-- VUE WIZARD ORES (formulaire principal)                  -->
+    <!-- ===================================================== -->
+
+    <record id="import_ores_wizard_form" model="ir.ui.view">
+        <field name="name">import.ores.wizard.form</field>
+        <field name="model">import.ores.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importer CSV ORES">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Importation ORES</h1>
+                        <p class="text-muted">
+                            Sélectionnez un fichier CSV pour importer les données
+                        </p>
+                        <p class="text-muted" style="font-size: 12px; color: #666;">
+                            📅 Le mois est automatiquement détecté depuis le nom du fichier ou son contenu<br/>
+                            🔍 Le type de fichier est automatiquement détecté si vous choisissez "Détection automatique"
+                        </p>
+                    </div>
+
+                    <group string="Informations">
+                        <group>
+                            <field name="community_id" required="1"/>
+                            <field name="file_type" required="1"/>
+                            <field name="detected_file_type" readonly="1"
+                                   invisible="file_type != 'auto'"
+                                   string="Type détecté"
+                                   help="Type détecté automatiquement à partir du fichier"/>
+                            <field name="month" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="file_name"/>
+                            <field name="file_content" filename="file_name" required="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Options de facturation -->
+                    <group string="Facturation">
+                        <field name="generate_invoices"/>
+                        <field name="invoice_date"/>
+                        <field name="payment_term_id"
+                               help="Condition de paiement (30 jours fin de mois par défaut)"/>
+                        <div class="text-muted" style="font-size: 11px;">
+                            <span>Journal automatique selon type de fichier :</span>
+                            <ul style="margin-top: 5px;">
+                                <li><strong>Production</strong> → Journal d'achat (facture fournisseur)</li>
+                                <li><strong>Consommation</strong> → Journal de vente (facture client)</li>
+                                <li><strong>Condition de paiement</strong> : 30 jours fin de mois par défaut</li>
+                                <li><strong>TVA</strong> : 6%</li>
+                            </ul>
+                        </div>
+                    </group>
+
+                    <!-- Nouveaux participants -->
+                    <group string="🆕 Nouveaux participants à créer"
+                           invisible="new_participants == 'Aucun nouveau participant' or new_participants == False or new_participants == ''">
+                        <field name="new_participants" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Participants existants -->
+                    <group string="✅ Participants déjà existants dans l'opération de partage"
+                           invisible="existing_participants == 'Aucun participant existant' or existing_participants == False or existing_participants == ''">
+                        <field name="existing_participants" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Confirmation -->
+                    <group string="Confirmation"
+                           invisible="has_new_participants == False">
+                        <field name="confirm_import"
+                               string="Je confirme l'ajout de ces nouveaux participants à l'opération de partage"/>
+                    </group>
+
+                    <footer>
+                        <!-- Bouton Importer (disabled) -->
+                        <button name="action_import"
+                                string="Importer"
+                                type="object"
+                                class="btn-secondary"
+                                invisible="import_enabled == True"/>
+
+                        <!-- Bouton Importer (enabled) -->
+                        <button name="action_import"
+                                string="Importer"
+                                type="object"
+                                class="btn-primary"
+                                invisible="import_enabled == False"/>
+
+                        <!-- Message quand tout est OK et pas de nouveaux participants -->
+                        <div class="text-success" style="margin: 8px 0;"
+                             invisible="import_enabled == False or has_new_participants == True">
+                            <i class="fa fa-check-circle"/> Tous les participants existent déjà dans l'opération de partage. Cliquez sur "Importer" pour continuer.
+                        </div>
+
+                        <!-- Message quand il y a des nouveaux participants -->
+                        <div class="text-warning" style="margin: 8px 0;"
+                             invisible="has_new_participants == False">
+                            <i class="fa fa-exclamation-triangle"/> De nouveaux participants vont être ajoutés. Veuillez confirmer ci-dessus.
+                        </div>
+
+                        <!-- Message quand détection automatique -->
+                        <div class="text-info" style="margin: 8px 0;"
+                             invisible="file_type != 'auto'">
+                            <i class="fa fa-info-circle"/> Le type sera détecté automatiquement lors du chargement du fichier.
+                        </div>
+
+                        <button string="Fermer"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ===================================================== -->
+    <!-- VUE PROGRESSION ORES : simple message (pas de barre)    -->
+    <!-- Le bouton est caché et cliqué automatiquement par JS    -->
+    <!-- ===================================================== -->
+
+    <record id="view_import_ores_progress_form" model="ir.ui.view">
+        <field name="name">import.ores.wizard.progress.form</field>
+        <field name="model">import.ores.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Chargement" create="0" edit="0">
+                <sheet>
+                    <div class="oe_title" style="text-align: center;">
+                        <h1 style="margin-top: 30px;">⏳ Chargement en cours...</h1>
+                        <p class="text-muted" style="font-size: 14px; margin-top: 15px;">
+                            Veuillez patienter pendant l'importation du fichier.<br/>
+                            Cette opération peut prendre quelques instants.
+                        </p>
+                    </div>
+
+                                      <!-- Bouton caché via classe CSS o_hidden (cliqué automatiquement par le JS) -->
+                    <footer>
+                        <button name="action_do_import"
+                                string="Lancer l'import"
+                                type="object"
+                                class="o_hidden"
+                                id="btn_do_import"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

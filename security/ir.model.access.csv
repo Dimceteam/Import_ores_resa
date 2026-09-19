@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_energy_community_user,energy.community.user,model_energy_community,base.group_user,1,1,1,1
+access_energy_production_user,energy.community.production.user,model_energy_community_production,base.group_user,1,1,1,1
+access_energy_consumption_user,energy.community.consumption.user,model_energy_community_consumption,base.group_user,1,1,1,1
+access_energy_participant_user,energy.community.participant.user,model_energy_community_participant,base.group_user,1,1,1,1
+access_import_ores_wizard_user,import.ores.wizard.user,model_import_ores_wizard,base.group_user,1,1,1,1
+access_import_resa_wizard_user,import.resa.wizard.user,model_import_resa_wizard,base.group_user,1,1,1,1
+access_energy_invoice_generator_wizard_user,energy.invoice.generator.wizard.user,model_energy_invoice_generator_wizard,base.group_user,1,1,1,1

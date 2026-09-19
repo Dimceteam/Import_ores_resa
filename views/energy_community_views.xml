@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue liste des opérations de partage -->
+    <record id="view_energy_community_list" model="ir.ui.view">
+        <field name="name">energy.community.list</field>
+        <field name="model">energy.community</field>
+        <field name="arch" type="xml">
+            <list string="Opérations de partage">
+                <field name="name"/>
+                <field name="product_price" sum="Moyenne"/>
+                <field name="producer_price" sum="Moyenne"/>
+                <field name="active"/>
+                <field name="month"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue formulaire d'une opération de partage -->
+    <record id="view_energy_community_form" model="ir.ui.view">
+        <field name="name">energy.community.form</field>
+        <field name="model">energy.community</field>
+        <field name="arch" type="xml">
+            <form string="Opération de partage">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nom de l'opération de partage"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="month" placeholder="2023-01"/>
+                        </group>
+                        <group>
+                            <field name="product_price" string="Prix vente (€/kWh)"/>
+                            <field name="producer_price" string="Prix achat producteur (€/kWh)"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Participants">
+                            <field name="partner_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue recherche opérations de partage -->
+    <record id="view_energy_community_search" model="ir.ui.view">
+        <field name="name">energy.community.search</field>
+        <field name="model">energy.community</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="month"/>
+                <filter name="active" string="Actives" domain="[('active','=',True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vue liste production -->
+    <record id="view_energy_production_list" model="ir.ui.view">
+        <field name="name">energy.community.production.list</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <list string="Productions"
+                  default_group_by="ean" 
+                  multi_edit="1">
+                <field name="timestamp"/>
+                <field name="ean"/>
+                <field name="partner_id"/>
+                <field name="production_brute" sum="Total"/>
+                <field name="production_autoconsommee" sum="Total"/>
+                <field name="production_non_allouee" sum="Total"/>
+                <field name="community_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue liste consommation -->
+    <record id="view_energy_consumption_list" model="ir.ui.view">
+        <field name="name">energy.community.consumption.list</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <list string="Consommations"
+                  default_group_by="ean" 
+                  multi_edit="1">
+                <field name="timestamp"/>
+                <field name="ean"/>
+                <field name="partner_id"/>
+                <field name="iteration"/>
+                <field name="prelevement_brut" sum="Total"/>
+                <field name="prelevement_couvert" sum="Total"/>
+                <field name="allo_consommation" sum="Total"/>
+                <field name="community_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue formulaire production -->
+    <record id="view_energy_production_form" model="ir.ui.view">
+        <field name="name">energy.community.production.form</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <form string="Production">
+                <group>
+                    <group>
+                        <field name="timestamp"/>
+                        <field name="ean"/>
+                        <field name="partner_id"/>
+                        <field name="community_id"/>
+                        <field name="month"/>
+                    </group>
+                    <group>
+                        <field name="production_brute"/>
+                        <field name="coefficient"/>
+                        <field name="production_allouee"/>
+                        <field name="production_autoconsommee"/>
+                        <field name="production_non_allouee"/>
+                        <field name="allo_production"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue formulaire consommation -->
+    <record id="view_energy_consumption_form" model="ir.ui.view">
+        <field name="name">energy.community.consumption.form</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <form string="Consommation">
+                <group>
+                    <group>
+                        <field name="timestamp"/>
+                        <field name="ean"/>
+                        <field name="partner_id"/>
+                        <field name="community_id"/>
+                        <field name="month"/>
+                        <field name="iteration"/>
+                    </group>
+                    <group>
+                        <field name="coefficient"/>
+                        <field name="prelevement_brut"/>
+                        <field name="production_mise_disposition"/>
+                        <field name="prelevement_couvert"/>
+                        <field name="surplus_production"/>
+                        <field name="allo_consommation"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>

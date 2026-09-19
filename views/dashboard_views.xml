@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================== -->
+    <!-- TABLEAU DE BORD - CONSOMMATION -->
+    <!-- ========================================== -->
+
+    <record id="view_dashboard_consumption_search" model="ir.ui.view">
+        <field name="name">dashboard.consumption.search</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <search string="Filtres Consommation">
+
+                <field name="community_id"
+                       string="Opération de partage"
+                       placeholder="Choisir une opération de partage..."/>
+                <field name="partner_id"
+                       string="Participant"
+                       placeholder="Choisir un participant (EAN)..."/>
+                <field name="ean"
+                       string="EAN"
+                       placeholder="Taper un EAN..."
+                       filter_domain="[('ean', 'ilike', self)]"/>
+
+                <separator/>
+
+                <!-- Filtres de plage de dates -->
+                <filter name="this_month" string="Ce mois"
+                        domain="[('timestamp', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="last_3_months" string="3 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=3)).strftime('%Y-%m-%d'))]"/>
+                <filter name="last_6_months" string="6 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=6)).strftime('%Y-%m-%d'))]"/>
+                <filter name="last_12_months" string="12 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=12)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
+                <filter name="group_community" string="Opération de partage"
+                        context="{'group_by': 'community_id'}"/>
+                <filter name="group_partner" string="Participant"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_ean" string="EAN"
+                        context="{'group_by': 'ean'}"/>
+
+                <searchpanel view_types="graph,pivot,list">
+                    <field name="community_id"
+                           string="Opération de partage"
+                           select="multi"
+                           icon="fa-users"
+                           enable_counters="1"/>
+                    <field name="partner_id"
+                           string="Participant (EAN)"
+                           select="multi"
+                           icon="fa-bolt"
+                           enable_counters="1"
+                           limit="0"/>
+                </searchpanel>
+
+            </search>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- VUES GRAPH - CONSOMMATION -->
+    <!-- ========================================== -->
+
+    <!-- Vue mensuelle : CONSERVÉE (id d'origine) -->
+    <record id="view_dashboard_consumption_graph" model="ir.ui.view">
+        <field name="name">dashboard.consumption.graph</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <graph string="Consommation" type="bar" stacked="False">
+                <field name="timestamp" interval="month"/>
+                <field name="ean" type="row"/>
+                <field name="prelevement_brut" type="measure"/>
+                <field name="prelevement_couvert" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue journalière : NOUVELLE -->
+    <record id="view_dashboard_consumption_graph_day" model="ir.ui.view">
+        <field name="name">dashboard.consumption.graph.day</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <graph string="Consommation (Jour)" type="bar" stacked="False">
+                <field name="timestamp" interval="day"/>
+                <field name="ean" type="row"/>
+                <field name="prelevement_brut" type="measure"/>
+                <field name="prelevement_couvert" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue hebdomadaire : NOUVELLE -->
+    <record id="view_dashboard_consumption_graph_week" model="ir.ui.view">
+        <field name="name">dashboard.consumption.graph.week</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <graph string="Consommation (Semaine)" type="bar" stacked="False">
+                <field name="timestamp" interval="week"/>
+                <field name="ean" type="row"/>
+                <field name="prelevement_brut" type="measure"/>
+                <field name="prelevement_couvert" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue annuelle : NOUVELLE -->
+    <record id="view_dashboard_consumption_graph_year" model="ir.ui.view">
+        <field name="name">dashboard.consumption.graph.year</field>
+        <field name="model">energy.community.consumption</field>
+        <field name="arch" type="xml">
+            <graph string="Consommation (Année)" type="bar" stacked="False">
+                <field name="timestamp" interval="year"/>
+                <field name="ean" type="row"/>
+                <field name="prelevement_brut" type="measure"/>
+                <field name="prelevement_couvert" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- ACTIONS - CONSOMMATION -->
+    <!-- ========================================== -->
+
+    <!-- Action d'origine : CONSERVÉE (pointe sur la vue mois) -->
+    <record id="action_dashboard_consumption" model="ir.actions.act_window">
+        <field name="name">Consommation</field>
+        <field name="res_model">energy.community.consumption</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_consumption_graph"/>
+        <field name="search_view_id" ref="view_dashboard_consumption_search"/>
+        <field name="target">main</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Visualisez les consommations de votre opération de partage
+            </p>
+        </field>
+    </record>
+
+    <record id="action_dashboard_consumption_day" model="ir.actions.act_window">
+        <field name="name">Consommation (Jour)</field>
+        <field name="res_model">energy.community.consumption</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_consumption_graph_day"/>
+        <field name="search_view_id" ref="view_dashboard_consumption_search"/>
+        <field name="target">main</field>
+    </record>
+
+    <record id="action_dashboard_consumption_week" model="ir.actions.act_window">
+        <field name="name">Consommation (Semaine)</field>
+        <field name="res_model">energy.community.consumption</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_consumption_graph_week"/>
+        <field name="search_view_id" ref="view_dashboard_consumption_search"/>
+        <field name="target">main</field>
+    </record>
+
+    <record id="action_dashboard_consumption_year" model="ir.actions.act_window">
+        <field name="name">Consommation (Année)</field>
+        <field name="res_model">energy.community.consumption</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_consumption_graph_year"/>
+        <field name="search_view_id" ref="view_dashboard_consumption_search"/>
+        <field name="target">main</field>
+    </record>
+
+
+    <!-- ========================================== -->
+    <!-- TABLEAU DE BORD - PRODUCTION -->
+    <!-- ========================================== -->
+
+    <record id="view_dashboard_production_search" model="ir.ui.view">
+        <field name="name">dashboard.production.search</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <search string="Filtres Production">
+
+                <field name="community_id"
+                       string="Opération de partage"
+                       placeholder="Choisir une opération de partage..."/>
+                <field name="partner_id"
+                       string="Participant"
+                       placeholder="Choisir un participant (EAN)..."/>
+                <field name="ean"
+                       string="EAN"
+                       placeholder="Taper un EAN..."
+                       filter_domain="[('ean', 'ilike', self)]"/>
+
+                <separator/>
+
+                <filter name="this_month" string="Ce mois"
+                        domain="[('timestamp', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="last_3_months" string="3 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=3)).strftime('%Y-%m-%d'))]"/>
+                <filter name="last_6_months" string="6 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=6)).strftime('%Y-%m-%d'))]"/>
+                <filter name="last_12_months" string="12 derniers mois"
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(months=12)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
+                <filter name="group_community" string="Opération de partage"
+                        context="{'group_by': 'community_id'}"/>
+                <filter name="group_partner" string="Participant"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_ean" string="EAN"
+                        context="{'group_by': 'ean'}"/>
+
+                <searchpanel view_types="graph,pivot,list">
+                    <field name="community_id"
+                           string="Opération de partage"
+                           select="multi"
+                           icon="fa-users"
+                           enable_counters="1"/>
+                    <field name="partner_id"
+                           string="Participant (EAN)"
+                           select="multi"
+                           icon="fa-bolt"
+                           enable_counters="1"
+                           limit="0"/>
+                </searchpanel>
+
+            </search>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- VUES GRAPH - PRODUCTION -->
+    <!-- ========================================== -->
+
+    <!-- Vue mensuelle : CONSERVÉE (id d'origine) -->
+    <record id="view_dashboard_production_graph" model="ir.ui.view">
+        <field name="name">dashboard.production.graph</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <graph string="Production" type="bar" stacked="False">
+                <field name="timestamp" interval="month"/>
+                <field name="ean" type="row"/>
+                <field name="production_brute" type="measure"/>
+                <field name="production_autoconsommee" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue journalière : NOUVELLE -->
+    <record id="view_dashboard_production_graph_day" model="ir.ui.view">
+        <field name="name">dashboard.production.graph.day</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <graph string="Production (Jour)" type="bar" stacked="False">
+                <field name="timestamp" interval="day"/>
+                <field name="ean" type="row"/>
+                <field name="production_brute" type="measure"/>
+                <field name="production_autoconsommee" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue hebdomadaire : NOUVELLE -->
+    <record id="view_dashboard_production_graph_week" model="ir.ui.view">
+        <field name="name">dashboard.production.graph.week</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <graph string="Production (Semaine)" type="bar" stacked="False">
+                <field name="timestamp" interval="week"/>
+                <field name="ean" type="row"/>
+                <field name="production_brute" type="measure"/>
+                <field name="production_autoconsommee" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vue annuelle : NOUVELLE -->
+    <record id="view_dashboard_production_graph_year" model="ir.ui.view">
+        <field name="name">dashboard.production.graph.year</field>
+        <field name="model">energy.community.production</field>
+        <field name="arch" type="xml">
+            <graph string="Production (Année)" type="bar" stacked="False">
+                <field name="timestamp" interval="year"/>
+                <field name="ean" type="row"/>
+                <field name="production_brute" type="measure"/>
+                <field name="production_autoconsommee" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- ACTIONS - PRODUCTION -->
+    <!-- ========================================== -->
+
+    <!-- Action d'origine : CONSERVÉE (pointe sur la vue mois) -->
+    <record id="action_dashboard_production" model="ir.actions.act_window">
+        <field name="name">Production</field>
+        <field name="res_model">energy.community.production</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_production_graph"/>
+        <field name="search_view_id" ref="view_dashboard_production_search"/>
+        <field name="target">main</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Visualisez les productions de votre opération de partage
+            </p>
+        </field>
+    </record>
+
+    <record id="action_dashboard_production_day" model="ir.actions.act_window">
+        <field name="name">Production (Jour)</field>
+        <field name="res_model">energy.community.production</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_production_graph_day"/>
+        <field name="search_view_id" ref="view_dashboard_production_search"/>
+        <field name="target">main</field>
+    </record>
+
+    <record id="action_dashboard_production_week" model="ir.actions.act_window">
+        <field name="name">Production (Semaine)</field>
+        <field name="res_model">energy.community.production</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_production_graph_week"/>
+        <field name="search_view_id" ref="view_dashboard_production_search"/>
+        <field name="target">main</field>
+    </record>
+
+    <record id="action_dashboard_production_year" model="ir.actions.act_window">
+        <field name="name">Production (Année)</field>
+        <field name="res_model">energy.community.production</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_id" ref="view_dashboard_production_graph_year"/>
+        <field name="search_view_id" ref="view_dashboard_production_search"/>
+        <field name="target">main</field>
+    </record>
+
+
+    <!-- ========================================== -->
+    <!-- MENUS -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_energy_dashboard"
+              name="Tableau de bord"
+              parent="menu_energy_community_root"
+              sequence="0"/>
+
+    <!-- Sous-menu Consommation (conteneur) -->
+    <menuitem id="menu_energy_dashboard_consumption"
+              name="Consommation"
+              parent="menu_energy_dashboard"
+              sequence="10"/>
+
+    <menuitem id="menu_energy_dashboard_consumption_day"
+              name="Par Jour"
+              parent="menu_energy_dashboard_consumption"
+              action="action_dashboard_consumption_day"
+              sequence="10"/>
+
+    <menuitem id="menu_energy_dashboard_consumption_week"
+              name="Par Semaine"
+              parent="menu_energy_dashboard_consumption"
+              action="action_dashboard_consumption_week"
+              sequence="20"/>
+  
+    <menuitem id="menu_energy_dashboard_consumption_month"
+              name="Par Mois"
+              parent="menu_energy_dashboard_consumption"
+              action="action_dashboard_consumption"
+              sequence="30"/>
+
+    <menuitem id="menu_energy_dashboard_consumption_year"
+              name="Par Année"
+              parent="menu_energy_dashboard_consumption"
+              action="action_dashboard_consumption_year"
+              sequence="40"/>
+
+    <!-- Sous-menu Production (conteneur) -->
+    <menuitem id="menu_energy_dashboard_production"
+              name="Production"
+              parent="menu_energy_dashboard"
+              sequence="20"/>
+
+    <menuitem id="menu_energy_dashboard_production_day"
+              name="Par Jour"
+              parent="menu_energy_dashboard_production"
+              action="action_dashboard_production_day"
+              sequence="10"/>
+
+    <menuitem id="menu_energy_dashboard_production_week"
+              name="Par Semaine"
+              parent="menu_energy_dashboard_production"
+              action="action_dashboard_production_week"
+              sequence="20"/>
+  
+   <menuitem id="menu_energy_dashboard_production_month"
+              name="Par Mois"
+              parent="menu_energy_dashboard_production"
+              action="action_dashboard_production"
+              sequence="30"/>
+
+    <menuitem id="menu_energy_dashboard_production_year"
+              name="Par Année"
+              parent="menu_energy_dashboard_production"
+              action="action_dashboard_production_year"
+              sequence="40"/>
+
+</odoo>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================================================== -->
+    <!-- ACTION WIZARD RESA                                      -->
+    <!-- ===================================================== -->
+
+    <record id="action_import_resa_wizard" model="ir.actions.act_window">
+        <field name="name">Importer fichier RESA</field>
+        <field name="res_model">import.resa.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ===================================================== -->
+    <!-- MENU RESA : APRÈS ORES (sequence 50)                    -->
+    <!-- ===================================================== -->
+
+    <menuitem id="menu_energy_community_import_resa"
+              name="Importer RESA (Excel)"
+              parent="menu_energy_community_root"
+              action="action_import_resa_wizard"
+              sequence="50"/>
+
+    <!-- ===================================================== -->
+    <!-- VUE WIZARD RESA (formulaire principal)                  -->
+    <!-- ===================================================== -->
+
+    <record id="import_resa_wizard_form" model="ir.ui.view">
+        <field name="name">import.resa.wizard.form</field>
+        <field name="model">import.resa.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importer RESA">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Importation RESA</h1>
+                        <p class="text-muted">
+                            Sélectionnez un fichier Excel pour importer les données RESA
+                        </p>
+                        <p class="text-muted" style="font-size: 12px; color: #666;">
+                            📅 Le mois est automatiquement détecté depuis le nom du fichier ou son contenu
+                        </p>
+                    </div>
+
+                    <group string="Informations">
+                        <group>
+                            <field name="community_id" required="1"/>
+                            <field name="month" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="file_name"/>
+                            <field name="file_content" filename="file_name" required="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Options de facturation -->
+                    <group string="Facturation">
+                        <field name="generate_invoices"/>
+                        <field name="invoice_date"/>
+                        <field name="payment_term_id"
+                               help="Condition de paiement (30 jours fin de mois par défaut)"/>
+                        <div class="text-muted" style="font-size: 11px;">
+                            <span>Journal automatique :</span>
+                            <ul style="margin-top: 5px;">
+                                <li><strong>Consommation</strong> → Journal de vente (facture client)</li>
+                                <li><strong>Production</strong> → Journal d'achat (facture fournisseur)</li>
+                                <li><strong>Condition de paiement</strong> : 30 jours fin de mois par défaut</li>
+                                <li><strong>TVA</strong> : 6%</li>
+                            </ul>
+                        </div>
+                    </group>
+
+                    <!-- Nouveaux participants -->
+                    <group string="🆕 Nouveaux participants à créer"
+                           invisible="new_participants == 'Aucun nouveau participant' or new_participants == False or new_participants == ''">
+                        <field name="new_participants" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Participants existants -->
+                    <group string="✅ Participants déjà existants dans l'opération de partage"
+                           invisible="existing_participants == 'Aucun participant existant' or existing_participants == False or existing_participants == ''">
+                        <field name="existing_participants" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Statistiques (après import) -->
+                    <group string="📊 Statistiques"
+                           invisible="import_stats == False">
+                        <field name="import_stats" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Confirmation -->
+                    <group string="Confirmation"
+                           invisible="has_new_participants == False">
+                        <field name="confirm_import"
+                               string="Je confirme l'ajout de ces nouveaux participants à l'opération de partage"/>
+                    </group>
+
+                    <footer>
+                        <!-- Bouton Importer (disabled) -->
+                        <button name="action_import"
+                                string="Importer"
+                                type="object"
+                                class="btn-secondary"
+                                invisible="import_enabled == True"/>
+
+                        <!-- Bouton Importer (enabled) -->
+                        <button name="action_import"
+                                string="Importer"
+                                type="object"
+                                class="btn-primary"
+                                invisible="import_enabled == False"/>
+
+                        <!-- Message quand tout est OK et pas de nouveaux participants -->
+                        <div class="text-success" style="margin: 8px 0;"
+                             invisible="import_enabled == False or has_new_participants == True">
+                            <i class="fa fa-check-circle"/> Tous les participants existent déjà dans l'opération de partage. Cliquez sur "Importer" pour continuer.
+                        </div>
+
+                        <!-- Message quand il y a des nouveaux participants -->
+                        <div class="text-warning" style="margin: 8px 0;"
+                             invisible="has_new_participants == False">
+                            <i class="fa fa-exclamation-triangle"/> De nouveaux participants vont être ajoutés. Veuillez confirmer ci-dessus.
+                        </div>
+
+                        <button string="Fermer"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ===================================================== -->
+    <!-- VUE PROGRESSION RESA : simple message (pas de barre)    -->
+    <!-- Le bouton est caché et cliqué automatiquement par JS    -->
+    <!-- ===================================================== -->
+
+    <record id="view_import_resa_progress_form" model="ir.ui.view">
+        <field name="name">import.resa.wizard.progress.form</field>
+        <field name="model">import.resa.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Chargement" create="0" edit="0">
+                <sheet>
+                    <div class="oe_title" style="text-align: center;">
+                        <h1 style="margin-top: 30px;">⏳ Chargement en cours...</h1>
+                        <p class="text-muted" style="font-size: 14px; margin-top: 15px;">
+                            Veuillez patienter pendant l'importation du fichier RESA.<br/>
+                            Cette opération peut prendre quelques instants.
+                        </p>
+                    </div>
+                    <!-- Bouton caché via classe CSS o_hidden (cliqué automatiquement par le JS) -->
+                    <footer>
+                        <button name="action_do_import"
+                                string="Lancer l'import"
+                                type="object"
+                                class="o_hidden"
+                                id="btn_do_import_resa"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>
