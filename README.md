@@ -4,7 +4,7 @@ Module Odoo 19 pour gérer les communautés d'énergie belges : import des fichi
 
 [![Odoo](https://img.shields.io/badge/Odoo-19.0-875A7B.svg)](https://www.odoo.com)
 [![License](https://img.shields.io/badge/License-LGPL--3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![Version](https://img.shields.io/badge/Version-0.98-brightgreen.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.00-brightgreen.svg)](#)
 
 ---
 
