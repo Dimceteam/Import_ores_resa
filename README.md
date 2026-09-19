@@ -205,7 +205,7 @@ La logique de facturation (dupliquée dans `import_ores_wizard.py`, `import_resa
 4. Toutes les factures sont créées à l'état **brouillon** (`state = draft`) — elles doivent être **relues et validées manuellement** en comptabilité avant envoi/paiement.
 5. Si aucun prix (`product_price` ou `producer_price`) n'est configuré sur l'opération de partage, les participants concernés ne sont **pas facturés** (et c'est signalé dans le résumé du wizard de génération sur période).
 
-> ⚠️ Une condition de paiement par défaut *« 30 jours fin de mois »* est **créée automatiquement** si aucune n'est sélectionnée et qu'aucune condition contenant « 30% » n'existe déjà.
+> ⚠️ Si aucune condition de paiement n'est sélectionnée dans le wizard, le module recherche une condition **existante** dont le nom contient la séquence « 30 » (recherche `ilike '30%'`, où le `%` de fin est redondant avec le comportement normal de `ilike` et ne représente donc pas un caractère `%` littéral à trouver dans le nom). Si une telle condition existe déjà — même sans rapport avec un délai de paiement, par ex. *"Escompte 2/10 net 30"* — c'est **elle** qui sera utilisée par erreur. Ce n'est que si **aucune** condition ne contient « 30 » qu'une nouvelle condition *« 30 jours fin de mois »* est **créée automatiquement**. Il est donc recommandé de toujours choisir explicitement la condition de paiement voulue avant de lancer l'import ou la génération de factures.
 
 ## Rapport de facture (graphique)
 
