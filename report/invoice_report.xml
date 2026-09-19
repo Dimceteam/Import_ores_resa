@@ -16,9 +16,8 @@
     </record>
 
     <!-- ============================================= -->
-    <!-- COPIE du template standard account.report_    -->
-    <!-- invoice_document, SANS la narration (mise en  -->
-    <!-- page 3).                                       -->
+    <!-- COPIE du template standard, SANS narration    -->
+    <!-- et avec textes en français                     -->
     <!-- ============================================= -->
     <template id="report_invoice_document_custom">
         <t t-call="web.external_layout">
@@ -30,7 +29,7 @@
                     <div class="col-6">
                         <t t-set="information_block" groups="account.group_delivery_invoice_address">
                             <div name="shipping_address_block">
-                                <strong class="d-block mt-3">Shipping Address</strong>
+                                <strong class="d-block mt-3">Adresse de livraison</strong>
                                 <div t-field="o.partner_shipping_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
                             </div>
                         </t>
@@ -40,7 +39,7 @@
                             <address class="mb-0" t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
                             <div t-if="o.partner_id.vat" id="partner_vat_address_not_same_as_shipping">
                                 <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-out="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
-                                <t t-else="">Tax ID</t>: <span t-field="o.partner_id.vat"/>
+                                <t t-else="">N° TVA</t>: <span t-field="o.partner_id.vat"/>
                             </div>
                             <div t-if="o.partner_id.country_code == 'MA' and o.partner_id.company_registry">
                                 ICE: <a t-field="o.partner_id.company_registry"/>
@@ -54,7 +53,7 @@
                             <address class="mb-0" t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
                             <div t-if="o.partner_id.vat" id="partner_vat_address_same_as_shipping">
                                 <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-out="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
-                                <t t-else="">Tax ID</t>: <span t-field="o.partner_id.vat"/>
+                                <t t-else="">N° TVA</t>: <span t-field="o.partner_id.vat"/>
                             </div>
                             <div t-if="o.partner_id.country_code == 'MA' and o.partner_id.company_registry">
                                 ICE: <a t-field="o.partner_id.company_registry"/>
@@ -68,7 +67,7 @@
                             <address class="mb-0" t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
                             <div t-if="o.partner_id.vat" id="partner_vat_no_shipping">
                                 <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-out="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
-                                <t t-else="">Tax ID</t>: <span t-field="o.partner_id.vat"/>
+                                <t t-else="">N° TVA</t>: <span t-field="o.partner_id.vat"/>
                             </div>
                             <div t-if="o.partner_id.country_code == 'MA' and o.partner_id.company_registry">
                                 ICE: <a t-field="o.partner_id.company_registry"/>
@@ -83,60 +82,60 @@
                     <t t-set="layout_document_title">
                         <t t-if="not proforma">
                             <span t-if="o.move_type == 'out_invoice' and o.state == 'posted'">
-                                <t name="invoice_title">Invoice</t>
+                                <t name="invoice_title">Facture</t>
                             </span>
                             <span t-elif="o.move_type == 'out_invoice' and o.state == 'draft'">
-                                <t name="draft_invoice_title">Draft Invoice</t>
+                                <t name="draft_invoice_title">Facture brouillon</t>
                             </span>
                             <span t-elif="o.move_type == 'out_invoice' and o.state == 'cancel'">
-                                <t name="cancelled_invoice_title">Cancelled Invoice</t>
+                                <t name="cancelled_invoice_title">Facture annulée</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'posted'">
-                                <t name="credit_note_title">Credit Note</t>
+                                <t name="credit_note_title">Note de crédit</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'draft'">
-                                <t name="draft_credit_note_title">Draft Credit Note</t>
+                                <t name="draft_credit_note_title">Note de crédit brouillon</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'cancel'">
-                                <t name="cancelled_credit_note_title">Cancelled Credit Note</t>
+                                <t name="cancelled_credit_note_title">Note de crédit annulée</t>
                             </span>
                             <span t-elif="o.move_type == 'in_refund' and not o.journal_id.is_self_billing">
-                                <t name="vendor_credit_note_title">Vendor Credit Note</t>
+                                <t name="vendor_credit_note_title">Note de crédit fournisseur</t>
                             </span>
                             <span t-elif="o.move_type == 'in_refund' and o.journal_id.is_self_billing">
-                                <t name="self_billing_credit_note_title">Self Billing Credit Note</t>
+                                <t name="self_billing_credit_note_title">Autofacturation - Note de crédit</t>
                             </span>
                             <span t-elif="o.move_type == 'in_invoice' and not o.journal_id.is_self_billing">
-                                <t name="vendor_bill_title">Vendor Bill</t>
+                                <t name="vendor_bill_title">Facture fournisseur</t>
                             </span>
                             <span t-elif="o.move_type == 'in_invoice' and o.journal_id.is_self_billing">
-                                <t name="self_billing_invoice_title">Self Billing</t>
+                                <t name="self_billing_invoice_title">Autofacturation</t>
                             </span>
                         </t>
                         <t t-else="">
                             <span t-if="o.move_type == 'out_invoice' and o.state == 'posted'">
-                                <t name="proforma_invoice_title">Proforma Invoice</t>
+                                <t name="proforma_invoice_title">Facture pro forma</t>
                             </span>
                             <span t-elif="o.move_type == 'out_invoice' and o.state == 'draft'">
-                                <t name="draft_proforma_invoice_title">Draft Proforma Invoice</t>
+                                <t name="draft_proforma_invoice_title">Facture pro forma brouillon</t>
                             </span>
                             <span t-elif="o.move_type == 'out_invoice' and o.state == 'cancel'">
-                                <t name="cancelled_proforma_invoice_title">Cancelled Proforma Invoice</t>
+                                <t name="cancelled_proforma_invoice_title">Facture pro forma annulée</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'posted'">
-                                <t name="proforma_credit_note_title">Proforma Credit Note</t>
+                                <t name="proforma_credit_note_title">Note de crédit pro forma</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'draft'">
-                                <t name="draft_proforma_credit_note_title">Draft Proforma Credit Note</t>
+                                <t name="draft_proforma_credit_note_title">Note de crédit pro forma brouillon</t>
                             </span>
                             <span t-elif="o.move_type == 'out_refund' and o.state == 'cancel'">
-                                <t name="cancelled_proforma_credit_note_title">Cancelled Proforma Credit Note</t>
+                                <t name="cancelled_proforma_credit_note_title">Note de crédit pro forma annulée</t>
                             </span>
                             <span t-elif="o.move_type == 'in_refund'">
-                                <t name="proforma_vendor_credit_note_title">Proforma Vendor Credit Note</t>
+                                <t name="proforma_vendor_credit_note_title">Note de crédit fournisseur pro forma</t>
                             </span>
                             <span t-elif="o.move_type == 'in_invoice'">
-                                <t name="proforma_vendor_bill_title">Proforma Vendor Bill</t>
+                                <t name="proforma_vendor_bill_title">Facture fournisseur pro forma</t>
                             </span>
                         </t>
                         <span t-if="o.name and o.name != '/'" t-field="o.name">INV/2023/0001</span>
@@ -146,22 +145,22 @@
 
                     <div id="informations" class="row mb-4" t-if="o.invoice_date or (o.invoice_date_due and o.move_type == 'out_invoice' and o.state == 'posted') or o.delivery_date or o.invoice_origin or o.partner_id.ref or o.ref or o.invoice_incoterm_id">
                         <div class="col" t-if="o.invoice_date" name="invoice_date">
-                            <t t-if="o.move_type == 'out_invoice'"><strong>Invoice Date</strong></t>
-                            <t t-elif="o.move_type == 'out_refund'"><strong>Credit Note Date</strong></t>
-                            <t t-elif="o.move_type == 'out_receipt'"><strong>Receipt Date</strong></t>
+                            <t t-if="o.move_type == 'out_invoice'"><strong>Date de facturation</strong></t>
+                            <t t-elif="o.move_type == 'out_refund'"><strong>Date de la note de crédit</strong></t>
+                            <t t-elif="o.move_type == 'out_receipt'"><strong>Date de réception</strong></t>
                             <t t-else=""><strong>Date</strong></t>
                             <div t-field="o.invoice_date">2023-09-12</div>
                         </div>
                         <div class="col" t-if="o.invoice_date_due and o.move_type == 'out_invoice' and o.state == 'posted'" name="due_date">
-                            <strong>Due Date</strong>
+                            <strong>Échéance</strong>
                             <div t-field="o.invoice_date_due">2023-10-31</div>
                         </div>
                         <div class="col" t-if="o.taxable_supply_date and o.show_taxable_supply_date" name="taxable_supply_date">
-                            <strong>Taxable Supply</strong>
+                            <strong>Fourniture taxable</strong>
                             <div t-field="o.taxable_supply_date">2023-10-31</div>
                         </div>
                         <div class="col" t-if="o.delivery_date" name="delivery_date">
-                            <strong>Delivery Date</strong>
+                            <strong>Date de livraison</strong>
                             <div t-field="o.delivery_date">2023-09-25</div>
                         </div>
                         <div class="col" t-if="o.invoice_origin" name="origin">
@@ -169,11 +168,11 @@
                             <div t-field="o.invoice_origin">SO123</div>
                         </div>
                         <div class="col" t-if="o.partner_id.ref" name="customer_code">
-                            <strong>Customer Code</strong>
+                            <strong>Numéro de client</strong>
                             <div t-field="o.partner_id.ref"/>
                         </div>
                         <div class="col" t-if="o.ref" name="reference">
-                            <strong>Reference</strong>
+                            <strong>Référence</strong>
                             <div t-field="o.ref">INV/2023/00001</div>
                         </div>
                         <div class="col" t-if="o.invoice_incoterm_id" name="incoterm_id">
@@ -195,14 +194,14 @@
                         <thead t-attf-style="#{has_long_desc and 'display: table-row-group;' or ''}">
                             <tr>
                                 <th name="th_description" class="text-start"><span>Description</span></th>
-                                <th name="th_quantity" class="text-end"><span>Quantity</span></th>
-                                <th name="th_priceunit" t-attf-class="text-end text-nowrap {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Unit Price</span></th>
+                                <th name="th_quantity" class="text-end"><span>Quantité</span></th>
+                                <th name="th_priceunit" t-attf-class="text-end text-nowrap {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Prix unitaire</span></th>
                                 <th name="th_discount" t-if="display_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-                                    <span>Disc.%</span>
+                                    <span>Rem.%</span>
                                 </th>
                                 <th name="th_taxes" t-if="display_taxes" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Taxes</span></th>
                                 <th name="th_subtotal" class="text-end">
-                                    <span>Amount</span>
+                                    <span>Montant</span>
                                 </th>
                             </tr>
                         </thead>
@@ -363,8 +362,8 @@
                                                     <tr t-if="payment_vals['is_exchange'] == 0">
                                                         <td>
                                                             <i class="oe_form_field text-end oe_payment_label">
-                                                                <t t-if="payment_vals['is_refund']">Reversed on </t>
-                                                                <t t-else="">Paid on </t>
+                                                                <t t-if="payment_vals['is_refund']">Annulé le </t>
+                                                                <t t-else="">Payé le </t>
                                                                 <t t-out="payment_vals['date']" t-options='{"widget": "date"}'>2021-09-19</t>
                                                             </i>
                                                         </td>
@@ -375,7 +374,7 @@
                                                 </t>
                                                 <t t-if="len(payments_vals) &gt; 0">
                                                     <tr class="fw-bold">
-                                                        <td>Amount Due</td>
+                                                        <td>Montant dû</td>
                                                         <td class="text-end">
                                                             <span t-field="o.amount_residual">11.05</span>
                                                         </td>
@@ -388,7 +387,7 @@
                             </div>
                             <div class="mb-2">
                                 <p class="text-end lh-sm" t-if="o.company_id.display_invoice_amount_total_words">
-                                    Total amount in words: <br/>
+                                    Montant total en lettres : <br/>
                                     <small class="text-muted lh-sm"><span t-field="o.amount_total_words">Thirty one dollar and Five cents</span></small>
                                 </p>
                             </div>
@@ -413,22 +412,23 @@
                             </div>
                             <t t-set="payment_term_details" t-value="o.payment_term_details"/>
                             <div class="mb-3">
-                                <span id="payment_terms_note_id" t-if="o.invoice_payment_term_id.note" t-field="o.invoice_payment_term_id.note" name="payment_term">Payment within 30 calendar day</span><br/>
+                                <span id="payment_terms_note_id" t-if="o.invoice_payment_term_id.note" t-field="o.invoice_payment_term_id.note" name="payment_term">Paiement à 30 jours calendrier</span><br/>
                                 <t t-if="o.invoice_payment_term_id.display_on_invoice and payment_term_details">
                                     <div t-if="o.show_payment_term_details" id="total_payment_term_details_table" class="row">
                                         <div t-attf-class="#{'col-10' if report_type != 'html' else 'col-sm-10 col-md-9'}">
                                             <t t-if="o._is_eligible_for_early_payment_discount(o.currency_id,o.invoice_date)">
                                                 <table class="d-none"><tbody><tr><td/></tr></tbody></table>
                                                 <div id="early_payment_discount">
-                                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-out="o.invoice_payment_term_id._get_amount_due_after_discount(o.amount_total, o.amount_tax)">30.00</span> due if paid before
+                                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-out="o.invoice_payment_term_id._get_amount_due_after_discount(o.amount_total, o.amount_tax)">30.00</span>
+                                                    dû si payé avant le
                                                     <span t-out="o.invoice_payment_term_id._get_last_discount_date_formatted(o.invoice_date)">2024-01-01</span>
                                                 </div>
                                             </t>
                                             <t t-if="len(payment_term_details) &gt; 1" t-foreach="payment_term_details" t-as="term">
                                                 <div>
-                                                    <span t-out="term_index + 1">1</span> - Installment of
+                                                    <span t-out="term_index + 1">1</span> - Tranche de
                                                     <t t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-out="term.get('amount')" class="text-end">31.05</t>
-                                                    <span> due on </span>
+                                                    <span> échéance le </span>
                                                     <t t-out="term.get('date')" class="text-start">2024-01-01</t>
                                                 </div>
                                             </t>
@@ -438,9 +438,10 @@
                             </div>
                             <div class="mb-3" t-if="o.move_type in ('out_invoice', 'in_refund') and o.payment_reference">
                                 <p name="payment_communication">
-                                    Payment Communication: <span class="fw-bold" t-field="o.payment_reference">INV/2023/00001</span>
+                                    Communication de paiement :
+                                    <span class="fw-bold" t-field="o.payment_reference">INV/2023/00001</span>
                                     <t t-if="o.partner_bank_id">
-                                        <br/> on this account: <span t-field="o.partner_bank_id" class="fw-bold"/>
+                                        <br/> sur ce compte : <span t-field="o.partner_bank_id" class="fw-bold"/>
                                     </t>
                                 </p>
                             </div>
@@ -455,7 +456,7 @@
                                     </p>
                                 </div>
                                 <div class="d-inline text-muted lh-sm fst-italic" id="qrcode_info" t-if="qr_code_url">
-                                    <p>Scan this QR Code with<br/>your banking application</p>
+                                    <p>Scannez ce QR code avec<br/>votre application bancaire</p>
                                 </div>
                             </div>
                             <t t-set="show_link_qr" t-value="o.display_link_qr_code and o.amount_residual"/>
@@ -469,11 +470,11 @@
                                     </p>
                                 </div>
                                 <div class="d-inline lh-sm" id="qrcode_info" t-if="portal_qr_code">
-                                    <p class="fw-bold mb-0">PAY IN A FLASH!</p>
-                                    <p class="text-muted fst-italic">Scan the QR code<br/>or click to pay online</p>
+                                    <p class="fw-bold mb-0">PAYEZ EN UN ÉCLAIR !</p>
+                                    <p class="text-muted fst-italic">Scannez le QR code<br/>ou cliquez pour payer en ligne</p>
                                 </div>
                             </div>
-                            <!-- terms and conditions : SUPPRIMÉ ici car on les met sur la page 3 -->
+                            <!-- terms and conditions : SUPPRIMÉ ici (mises en page 3) -->
                             <div class="oe_structure"/>
                         </div>
                     </div>
