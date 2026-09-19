@@ -60,7 +60,7 @@ Ce module permet d'**importer ces fichiers directement dans Odoo**, de les ratta
 - ✅ Facture client incluant automatiquement, en plus du prix de l'énergie : le **coût de restitution des CV** et le **droit d'accises spécial 2026**
 - ✅ **Anti-doublon de facturation** : une facture n'est jamais recréée si une facture (brouillon ou validée) existe déjà pour le même participant / la même période / la même opération
 - ✅ **Rapport de facture enrichi** avec un graphique matplotlib intégré (historique 12 mois de consommation/production du point EAN facturé)
-- ✅ Barre de progression JS pendant l'import
+- ✅ Écran d'attente **« Veuillez patienter »** affiché pendant l'import, avec **déclenchement automatique** de l'import réel via JS (pas de clic manuel supplémentaire nécessaire, mais pas de barre de progression ni de pourcentage d'avancement)
 
 ## Installation
 
@@ -138,7 +138,7 @@ Menu : **Communauté d'énergie ▸ Importer ORES (CSV)**
   2. Détection automatique du **type de fichier** par analyse des en-têtes CSV (mots-clés production vs consommation) ;
   3. Extraction de tous les **EAN** présents et distinction entre participants **déjà connus** de l'opération et **nouveaux** participants ;
   4. Si de nouveaux participants sont détectés, une **case de confirmation** doit être cochée avant de pouvoir lancer l'import.
-- `action_import()` ouvre une fenêtre modale de progression (`view_import_ores_progress_form`), puis `action_do_import()` réalise l'import réel :
+- `action_import()` ouvre une fenêtre modale d'attente (`view_import_ores_progress_form`, message statique « Veuillez patienter pendant l'importation du fichier »). Le script `import_progress.js` détecte automatiquement l'apparition du bouton `action_do_import` dans cette modale et le **clique lui-même** après un court délai, pour enchaîner sans action manuelle vers l'import réel — il n'affiche aucune progression chiffrée, il ne fait qu'automatiser ce clic. `action_do_import()` réalise ensuite l'import proprement dit :
   - le fichier est relu ligne par ligne (`csv.DictReader`, délimiteur `;`, encodage `utf-8-sig`) ;
   - un **cache local** des partenaires (par EAN) et des enregistrements existants (par clé timestamp/EAN\[/itération]) évite les recherches répétées en base ;
   - chaque ligne est **créée ou mise à jour** (upsert) selon qu'un enregistrement existe déjà pour la même clé ;
@@ -290,6 +290,7 @@ Ces constantes sont définies **en dur** dans le code (`import_ores_wizard.py`, 
 - **Silence des erreurs ligne par ligne** : lors de l'import, une ligne en erreur est journalisée (`_logger.warning`) et **ignorée**, sans interrompre l'import global — vérifier les logs serveur en cas de résultat inattendu.
 - **`matplotlib` optionnel mais recommandé** : sans ce paquet, les factures s'impriment sans graphique de consommation/production.
 - **Sécurité large** : tous les utilisateurs internes ont un accès complet aux données et aux wizards d'import/facturation (voir section Sécurité).
+- **Pas de vraie barre de progression** : le JS (`import_progress.js`) ne fait qu'auto-cliquer le bouton de lancement de l'import dès qu'il apparaît dans l'écran d'attente ; il n'y a aucun suivi chiffré (pourcentage, lignes traitées, etc.) pendant le traitement, qui peut être long sur de gros fichiers.
 
 ## Dépannage (FAQ)
 
