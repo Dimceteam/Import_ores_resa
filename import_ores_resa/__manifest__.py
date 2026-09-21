@@ -1,6 +1,6 @@
 {
     'name': 'Import ORES/RESA - Communauté d\'énergie',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Tools',
     'summary': 'Module pour importer les fichiers ORES/RESA',
     'description': """
@@ -10,8 +10,8 @@
         - Génération automatique des factures
         - Analyse des participants
 
-        Note: la génération du graphique de consommation/production sur les factures
-        nécessite le package Python "matplotlib" installé sur le serveur Odoo.
+        Note: le graphique de consommation/production sur les factures est généré
+        nativement en SVG (aucune dépendance Python externe, type matplotlib, requise).
     """,
     'author': 'Wattlabs',
     'website': 'https://www.wattlabs.be',
@@ -19,7 +19,7 @@
     'license': 'LGPL-3',
     'depends': ['base', 'account', 'web'],
     'external_dependencies': {
-        'python': ['matplotlib', 'openpyxl'],
+        'python': ['openpyxl'],
     },
     'data': [
         'security/ir.model.access.csv',
