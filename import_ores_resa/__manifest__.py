@@ -1,6 +1,6 @@
 {
     'name': 'Import ORES/RESA - Communauté d\'énergie',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Tools',
     'summary': 'Module pour importer les fichiers ORES/RESA',
     'description': """
