@@ -1,12 +1,18 @@
 from odoo import models, fields, api, _
 import base64
-import io
 import logging
 import re
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from xml.sax.saxutils import escape as xml_escape
 
 _logger = logging.getLogger(__name__)
+
+# Couleurs utilisées pour les graphiques (identiques à la version précédente)
+COLOR_CONSO_BRUT = '#0066ff'
+COLOR_CONSO_COUVERT = '#00cc66'
+COLOR_PROD_BRUT = '#ff6600'
+COLOR_PROD_AUTOCONSO = '#9900cc'
 
 
 class AccountMove(models.Model):
@@ -67,117 +73,226 @@ class AccountMove(models.Model):
         _logger.info(f"Consommations trouvées: {len(consumptions)}")
         _logger.info(f"Productions trouvées: {len(productions)}")
 
-        # ⭐ On génère TOUJOURS le graphique (même vide)
+        # ⭐ On génère TOUJOURS le graphique (même vide), en SVG natif (pas de dépendance externe)
         try:
-            import matplotlib
-            matplotlib.use('Agg')
-            import matplotlib.pyplot as plt
+            # ---- Agrégation Consommation ----
+            conso_months, conso_brut, conso_couvert = self._aggregate_monthly(
+                consumptions, 'prelevement_brut', 'prelevement_couvert')
 
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7))
+            # ---- Agrégation Production ----
+            prod_months, prod_brut, prod_autoconso = self._aggregate_monthly(
+                productions, 'production_brute', 'production_autoconsommee')
 
-            # ---- Consommation ----
-            if consumptions:
-                conso_data = {}
-                for c in consumptions:
-                    month_key = c.timestamp.strftime('%Y-%m')
-                    if month_key not in conso_data:
-                        conso_data[month_key] = {'brut': 0.0, 'couvert': 0.0}
-                    conso_data[month_key]['brut'] += c.prelevement_brut or 0.0
-                    conso_data[month_key]['couvert'] += c.prelevement_couvert or 0.0
+            panel_conso = self._build_bar_chart_panel(
+                title=f'Consommation - {ean or "N/A"}',
+                month_keys=conso_months,
+                series=[
+                    ('Prélèvement brut', COLOR_CONSO_BRUT, conso_brut),
+                    ('Prélèvement couvert', COLOR_CONSO_COUVERT, conso_couvert),
+                ],
+            )
 
-                months = sorted(conso_data.keys())
-                if months:
-                    month_labels = []
-                    for m in months:
-                        dt = datetime.strptime(m, '%Y-%m')
-                        month_labels.append(dt.strftime('%b %Y'))
+            panel_prod = self._build_bar_chart_panel(
+                title=f'Production - {ean or "N/A"}',
+                month_keys=prod_months,
+                series=[
+                    ('Production brute', COLOR_PROD_BRUT, prod_brut),
+                    ('Production autoconsommée', COLOR_PROD_AUTOCONSO, prod_autoconso),
+                ],
+            )
 
-                    brut_values = [conso_data[m]['brut'] for m in months]
-                    couvert_values = [conso_data[m]['couvert'] for m in months]
+            svg = self._assemble_svg([panel_conso, panel_prod])
+            img_base64 = base64.b64encode(svg.encode('utf-8')).decode('ascii')
 
-                    x = range(len(months))
-                    width = 0.35
-                    ax1.bar([i - width / 2 for i in x], brut_values, width,
-                            label='Prélèvement brut', color='#0066ff')
-                    ax1.bar([i + width / 2 for i in x], couvert_values, width,
-                            label='Prélèvement couvert', color='#00cc66')
-                    ax1.set_xticks(x)
-                    ax1.set_xticklabels(month_labels, rotation=45, ha='right', fontsize=8)
-                    ax1.set_ylabel('kWh', fontsize=10)
-                    ax1.set_title(f'Consommation - {ean or "N/A"}',
-                                  fontsize=12, fontweight='bold')
-                    ax1.legend(fontsize=9)
-                    ax1.grid(True, alpha=0.3)
-                else:
-                    self._draw_empty_axes(ax1, 'Consommation', ean)
-            else:
-                self._draw_empty_axes(ax1, 'Consommation', ean)
-
-            # ---- Production ----
-            if productions:
-                prod_data = {}
-                for p in productions:
-                    month_key = p.timestamp.strftime('%Y-%m')
-                    if month_key not in prod_data:
-                        prod_data[month_key] = {'brut': 0.0, 'autoconsommee': 0.0}
-                    prod_data[month_key]['brut'] += p.production_brute or 0.0
-                    prod_data[month_key]['autoconsommee'] += p.production_autoconsommee or 0.0
-
-                months = sorted(prod_data.keys())
-                if months:
-                    month_labels = []
-                    for m in months:
-                        dt = datetime.strptime(m, '%Y-%m')
-                        month_labels.append(dt.strftime('%b %Y'))
-
-                    brut_values = [prod_data[m]['brut'] for m in months]
-                    autoconsommee_values = [prod_data[m]['autoconsommee'] for m in months]
-
-                    x = range(len(months))
-                    width = 0.35
-                    ax2.bar([i - width / 2 for i in x], brut_values, width,
-                            label='Production brute', color='#ff6600')
-                    ax2.bar([i + width / 2 for i in x], autoconsommee_values, width,
-                            label='Production autoconsommée', color='#9900cc')
-                    ax2.set_xticks(x)
-                    ax2.set_xticklabels(month_labels, rotation=45, ha='right', fontsize=8)
-                    ax2.set_ylabel('kWh', fontsize=10)
-                    ax2.set_title(f'Production - {ean or "N/A"}',
-                                  fontsize=12, fontweight='bold')
-                    ax2.legend(fontsize=9)
-                    ax2.grid(True, alpha=0.3)
-                else:
-                    self._draw_empty_axes(ax2, 'Production', ean)
-            else:
-                self._draw_empty_axes(ax2, 'Production', ean)
-
-            plt.tight_layout()
-
-            img_buffer = io.BytesIO()
-            plt.savefig(img_buffer, format='png', dpi=120, bbox_inches='tight')
-            img_buffer.seek(0)
-            img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
-            plt.close(fig)
-
-            _logger.info(f"✅ Graphique généré - Taille: {len(img_base64)} caractères")
+            _logger.info(f"✅ Graphique SVG généré - Taille: {len(img_base64)} caractères")
             return img_base64
 
         except Exception as e:
             _logger.error(f"❌ Erreur génération graphique: {e}")
             import traceback
             _logger.error(traceback.format_exc())
-            # Même en cas d'erreur matplotlib, on renvoie None (le template gère)
             return None
 
-    def _draw_empty_axes(self, ax, title, ean):
-        """Dessine un graphique vide avec un message 'Aucune donnée'."""
-        ax.text(0.5, 0.5, 'Aucune donnée disponible',
-                ha='center', va='center', transform=ax.transAxes,
-                fontsize=12, color='#999', style='italic')
-        ax.set_title(f'{title} - {ean or "N/A"}', fontsize=12, fontweight='bold')
-        ax.set_ylabel('kWh', fontsize=10)
-        ax.set_xticks([])
-        ax.grid(True, alpha=0.3)
+    # ------------------------------------------------------------------
+    # Génération de graphiques SVG natifs (sans dépendance externe)
+    # ------------------------------------------------------------------
+
+    @api.model
+    def _aggregate_monthly(self, records, field_brut, field_secondaire):
+        """Agrège des enregistrements (consumption/production) par mois.
+        Retourne (mois_triés, valeurs_brut, valeurs_secondaire) alignés sur mois_triés."""
+        data = {}
+        for rec in records:
+            month_key = rec.timestamp.strftime('%Y-%m')
+            if month_key not in data:
+                data[month_key] = [0.0, 0.0]
+            data[month_key][0] += getattr(rec, field_brut, 0.0) or 0.0
+            data[month_key][1] += getattr(rec, field_secondaire, 0.0) or 0.0
+
+        months = sorted(data.keys())
+        brut_values = [data[m][0] for m in months]
+        secondaire_values = [data[m][1] for m in months]
+        return months, brut_values, secondaire_values
+
+    @api.model
+    def _month_label(self, month_key):
+        dt = datetime.strptime(month_key, '%Y-%m')
+        return dt.strftime('%b %Y')
+
+    @api.model
+    def _format_value(self, value):
+        if abs(value) >= 1000:
+            return f'{value:,.0f}'.replace(',', ' ')
+        if abs(value) >= 10:
+            return f'{value:.0f}'
+        return f'{value:.1f}'
+
+    @api.model
+    def _build_bar_chart_panel(self, title, month_keys, series, unit='kWh',
+                                panel_width=1000, panel_height=340):
+        """Construit le contenu SVG (balise <g>) d'un panneau de graphique en
+        barres groupées, ou un panneau 'aucune donnée' si month_keys est vide.
+        `series` est une liste de tuples (label, couleur, valeurs)."""
+
+        left_margin = 75
+        right_margin = 25
+        top_margin = 65      # place pour le titre + la légende
+        bottom_margin = 85   # place pour les labels de mois pivotés
+
+        chart_x = left_margin
+        chart_y = top_margin
+        chart_w = panel_width - left_margin - right_margin
+        chart_h = panel_height - top_margin - bottom_margin
+
+        parts = []
+        parts.append(f'<rect x="0" y="0" width="{panel_width}" height="{panel_height}" '
+                      f'fill="#ffffff"/>')
+        parts.append(
+            f'<text x="{panel_width / 2}" y="24" text-anchor="middle" '
+            f'font-family="Helvetica,Arial,sans-serif" font-size="15" font-weight="bold" '
+            f'fill="#333333">{xml_escape(title)}</text>'
+        )
+
+        has_data = bool(month_keys) and any(any(v) for _, _, v in series)
+
+        if not has_data:
+            # ---- Panneau vide ----
+            parts.append(
+                f'<text x="{panel_width / 2}" y="{top_margin + chart_h / 2}" '
+                f'text-anchor="middle" font-family="Helvetica,Arial,sans-serif" '
+                f'font-size="13" font-style="italic" fill="#999999">'
+                f'Aucune donnée disponible</text>'
+            )
+            parts.append(
+                f'<rect x="{chart_x}" y="{chart_y}" width="{chart_w}" height="{chart_h}" '
+                f'fill="none" stroke="#dddddd" stroke-width="1"/>'
+            )
+            return f'<g>{"".join(parts)}</g>'
+
+        # ---- Légende ----
+        legend_items = [(label, color) for label, color, _ in series]
+        legend_gap = 22
+        approx_item_w = 190
+        legend_total_w = len(legend_items) * approx_item_w
+        legend_x = (panel_width - legend_total_w) / 2
+        legend_y = 42
+        for label, color in legend_items:
+            parts.append(f'<rect x="{legend_x}" y="{legend_y - 10}" width="12" height="12" '
+                          f'fill="{color}" rx="2"/>')
+            parts.append(
+                f'<text x="{legend_x + 18}" y="{legend_y}" '
+                f'font-family="Helvetica,Arial,sans-serif" font-size="10.5" '
+                f'fill="#333333">{xml_escape(label)}</text>'
+            )
+            legend_x += approx_item_w
+
+        # ---- Échelle Y ----
+        max_value = 0.0
+        for _, _, values in series:
+            if values:
+                max_value = max(max_value, max(values))
+        if max_value <= 0:
+            max_value = 1.0
+        max_value *= 1.15
+
+        nb_gridlines = 4
+        for i in range(nb_gridlines + 1):
+            frac = i / nb_gridlines
+            y = chart_y + chart_h - frac * chart_h
+            value = frac * max_value
+            parts.append(
+                f'<line x1="{chart_x}" y1="{y:.1f}" x2="{chart_x + chart_w}" y2="{y:.1f}" '
+                f'stroke="#e0e0e0" stroke-width="1"/>'
+            )
+            parts.append(
+                f'<text x="{chart_x - 8}" y="{y + 3:.1f}" text-anchor="end" '
+                f'font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#666666">'
+                f'{self._format_value(value)}</text>'
+            )
+        # Axe Y (unité)
+        parts.append(
+            f'<text x="16" y="{chart_y + chart_h / 2:.1f}" text-anchor="middle" '
+            f'font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#666666" '
+            f'transform="rotate(-90 16 {chart_y + chart_h / 2:.1f})">{xml_escape(unit)}</text>'
+        )
+
+        # ---- Barres groupées ----
+        nb_categories = len(month_keys)
+        nb_series = len(series)
+        group_w = chart_w / nb_categories
+        bar_w = (group_w * 0.6) / nb_series
+        inner_gap = 2
+
+        for idx, month_key in enumerate(month_keys):
+            group_center_x = chart_x + group_w * idx + group_w / 2
+            first_bar_x = group_center_x - (nb_series * bar_w) / 2
+
+            for s_idx, (label, color, values) in enumerate(series):
+                value = values[idx] if idx < len(values) else 0.0
+                bar_h = (value / max_value) * chart_h if max_value else 0
+                bar_x = first_bar_x + s_idx * (bar_w + inner_gap)
+                bar_y = chart_y + chart_h - bar_h
+                parts.append(
+                    f'<rect x="{bar_x:.1f}" y="{bar_y:.1f}" width="{max(bar_w - inner_gap, 0):.1f}" '
+                    f'height="{bar_h:.1f}" fill="{color}"/>'
+                )
+
+            # Label du mois, pivoté à 45°
+            label_x = group_center_x
+            label_y = chart_y + chart_h + 14
+            month_label = xml_escape(self._month_label(month_key))
+            parts.append(
+                f'<text x="{label_x:.1f}" y="{label_y:.1f}" text-anchor="end" '
+                f'font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#333333" '
+                f'transform="rotate(-45 {label_x:.1f} {label_y:.1f})">{month_label}</text>'
+            )
+
+        # Cadre du graphique
+        parts.append(
+            f'<rect x="{chart_x}" y="{chart_y}" width="{chart_w}" height="{chart_h}" '
+            f'fill="none" stroke="#cccccc" stroke-width="1"/>'
+        )
+
+        return f'<g>{"".join(parts)}</g>'
+
+    @api.model
+    def _assemble_svg(self, panels, panel_width=1000, panel_height=340, gap=30):
+        """Empile verticalement une liste de panneaux (contenu <g>...</g>) dans
+        un unique document SVG et retourne le SVG complet sous forme de string."""
+        total_height = len(panels) * panel_height + (len(panels) - 1) * gap
+        body = []
+        for idx, panel in enumerate(panels):
+            y_offset = idx * (panel_height + gap)
+            body.append(f'<g transform="translate(0,{y_offset})">{panel}</g>')
+
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'viewBox="0 0 {panel_width} {total_height}" '
+            f'width="{panel_width}" height="{total_height}">'
+            f'<rect x="0" y="0" width="{panel_width}" height="{total_height}" fill="#ffffff"/>'
+            f'{"".join(body)}'
+            f'</svg>'
+        )
 
     def _extract_ean_from_ref(self):
         """Extrait l'EAN depuis la référence de la facture"""
