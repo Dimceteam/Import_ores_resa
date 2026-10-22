@@ -250,7 +250,7 @@ Tous les modèles du module sont accessibles en **lecture / écriture / créatio
 | `import.resa.wizard` | CRUD complet — utilisateurs internes |
 | `energy.invoice.generator.wizard` | CRUD complet — utilisateurs internes |
 
-> ⚠️ Aucune restriction par groupe métier spécifique (ex. comptabilité) n'est définie : **tout utilisateur interne** peut importer des données et générer des factures brouillon. Le générateur de factures sur période vérifie néanmoins que l'utilisateur possède le groupe `account.group_account_invoice` avant de créer effectivement des factures. Il est recommandé d'adapter `ir.model.access.csv` (ou d'ajouter des règles d'enregistrement) selon vos besoins de séparation des rôles.
+> ⚠️ Aucune restriction par groupe métier spécifique (ex. comptabilité) n'est définie : **tout utilisateur interne** peut importer des données et générer des factures brouillon. Le générateur de factures sur période vérifie néanmoins que l'utilisateur possède le groupe `account.group_account_invoice` avant de créer effectivement des factures.
 
 ## Formats de fichiers attendus
 
