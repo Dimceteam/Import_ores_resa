@@ -1,0 +1,8 @@
+id,name,model_id,group_id/id,operation,domain
+access_energy_community_user,energy.community.user,energy.community,base.group_user,crud,
+access_energy_production_user,energy.community.production.user,energy.community.production,base.group_user,crud,
+access_energy_consumption_user,energy.community.consumption.user,energy.community.consumption,base.group_user,crud,
+access_energy_participant_user,energy.community.participant.user,energy.community.participant,base.group_user,crud,
+access_import_ores_wizard_user,import.ores.wizard.user,import.ores.wizard,base.group_user,crud,
+access_import_resa_wizard_user,import.resa.wizard.user,import.resa.wizard,base.group_user,crud,
+access_energy_invoice_generator_wizard_user,energy.invoice.generator.wizard.user,energy.invoice.generator.wizard,base.group_user,crud,

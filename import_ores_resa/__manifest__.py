@@ -1,6 +1,6 @@
 {
     'name': 'Import ORES/RESA - Communauté d\'énergie',
-    'version': '19.0.1.0.1',
+    'version': '20.0.1.0.0',
     'category': 'Tools',
     'summary': 'Module pour importer les fichiers ORES/RESA',
     'description': """
@@ -22,7 +22,7 @@
         'python': ['openpyxl'],
     },
     'data': [
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
         'views/energy_community_views.xml',
         'views/import_ores_wizard_views.xml',
         'views/import_resa_wizard_views.xml',

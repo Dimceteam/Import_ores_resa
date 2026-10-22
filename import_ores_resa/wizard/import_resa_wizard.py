@@ -57,6 +57,19 @@ class ImportResaWizard(models.TransientModel):
     # ANALYSE
     # ==========================================
 
+    def _get_file_bytes(self):
+        """Retourne le contenu brut (bytes) du fichier uploadé.
+
+        Compatible Odoo 19 (base64 str/bytes) et Odoo 20 (objet BinaryValue).
+        """
+        self.ensure_one()
+        value = self.file_content
+        if not value:
+            return b''
+        if hasattr(value, 'content'):  # BinaryValue (Odoo 20)
+            return bytes(value.content)
+        return base64.b64decode(value)  # base64 (str/bytes) - Odoo <= 19
+
     @api.onchange('file_content')
     def _onchange_file_content(self):
         self.new_participants = False
@@ -71,7 +84,7 @@ class ImportResaWizard(models.TransientModel):
 
         try:
             self._detect_month()
-            excel_data = base64.b64decode(self.file_content)
+            excel_data = self._get_file_bytes()
             workbook = load_workbook(io.BytesIO(excel_data), data_only=True)
             ean_list = self._extract_eans_from_sheets(workbook)
 
@@ -154,7 +167,7 @@ class ImportResaWizard(models.TransientModel):
 
         if self.file_content:
             try:
-                excel_data = base64.b64decode(self.file_content)
+                excel_data = self._get_file_bytes()
                 workbook = load_workbook(io.BytesIO(excel_data), data_only=True)
                 for sheet_name in workbook.sheetnames:
                     sheet = workbook[sheet_name]
@@ -263,7 +276,7 @@ class ImportResaWizard(models.TransientModel):
         """
         self.ensure_one()
 
-        excel_data = base64.b64decode(self.file_content)
+        excel_data = self._get_file_bytes()
         workbook = load_workbook(io.BytesIO(excel_data), data_only=True)
 
         # 🎯 Cache LOCAL (dictionnaires Python, pas d'attributs d'enregistrement)

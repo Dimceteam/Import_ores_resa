@@ -87,6 +87,19 @@ class ImportOresWizard(models.TransientModel):
                 return 'consumption'
             return None
 
+    def _get_file_bytes(self):
+        """Retourne le contenu brut (bytes) du fichier uploadé.
+
+        Compatible Odoo 19 (base64 str/bytes) et Odoo 20 (objet BinaryValue).
+        """
+        self.ensure_one()
+        value = self.file_content
+        if not value:
+            return b''
+        if hasattr(value, 'content'):  # BinaryValue (Odoo 20)
+            return bytes(value.content)
+        return base64.b64decode(value)  # base64 (str/bytes) - Odoo <= 19
+
     @api.onchange('file_content')
     def _onchange_file_content(self):
         self.new_participants = False
@@ -101,7 +114,7 @@ class ImportOresWizard(models.TransientModel):
 
         try:
             self._detect_month()
-            csv_data = base64.b64decode(self.file_content)
+            csv_data = self._get_file_bytes()
             data_file = io.StringIO(csv_data.decode("utf-8-sig"))
             csv_reader = csv.DictReader(data_file, delimiter=';')
             headers = csv_reader.fieldnames or []
@@ -186,7 +199,7 @@ class ImportOresWizard(models.TransientModel):
 
         if self.file_content:
             try:
-                csv_data = base64.b64decode(self.file_content)
+                csv_data = self._get_file_bytes()
                 data_file = io.StringIO(csv_data.decode("utf-8-sig"))
                 first_lines = data_file.readlines()[:10]
                 for line in first_lines:
@@ -214,7 +227,7 @@ class ImportOresWizard(models.TransientModel):
             raise UserError(_("Impossible de détecter le mois."))
 
         if self.file_type == 'auto':
-            csv_data = base64.b64decode(self.file_content)
+            csv_data = self._get_file_bytes()
             data_file = io.StringIO(csv_data.decode("utf-8-sig"))
             csv_reader = csv.DictReader(data_file, delimiter=';')
             headers = csv_reader.fieldnames or []
@@ -244,7 +257,7 @@ class ImportOresWizard(models.TransientModel):
         """
         self.ensure_one()
 
-        csv_data = base64.b64decode(self.file_content)
+        csv_data = self._get_file_bytes()
         data_file = io.StringIO(csv_data.decode("utf-8-sig"))
         csv_reader = csv.DictReader(data_file, delimiter=';')
         rows = list(csv_reader)

@@ -1,14 +1,14 @@
 # Import ORES/RESA - Communauté d'énergie
 
-Module Odoo 19 permettant de gérer une **communauté d'énergie** (partage d'énergie entre participants) : import des fichiers de comptage envoyés par les gestionnaires de réseau **ORES** (CSV) et **RESA** (Excel), suivi de la production/consommation, tableaux de bord, et **génération automatique des factures** clients (consommation) et fournisseurs (production).
+Module Odoo 20 permettant de gérer une **communauté d'énergie** (partage d'énergie entre participants) : import des fichiers de comptage envoyés par les gestionnaires de réseau **ORES** (CSV) et **RESA** (Excel), suivi de la production/consommation, tableaux de bord, et **génération automatique des factures** clients (consommation) et fournisseurs (production).
 
 - **Auteur / Éditeur** : Wattlabs — https://www.wattlabs.be
 - **Support** : support@wattlabs.be
 - **Licence** : LGPL-3
 - **Catégorie** : Tools
-- **Version** : 19.0.1.0.0 (Odoo 19)
+- **Version** : 20.0.1.0.0 (Odoo 20)
 - **Dépendances Odoo** : `base`, `account`, `web`
-- **Dépendances Python** : `matplotlib` (graphiques sur factures), `openpyxl` (lecture des fichiers RESA au format Excel)
+- **Dépendances Python** : `openpyxl` (lecture des fichiers RESA au format Excel)
 
 ---
 
